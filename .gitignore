@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/com.zhong.chinese_calendar/bin/Debug/net8.0
+/com.zhong.chinese_calendar/obj
+/com.zhong.chinese_calendar/Properties/PublishProfiles
+/com.zhong.chinese_calendar/Properties
+/com.zhong.chinese_calendarTests/bin/Debug/net8.0
+/com.zhong.chinese_calendarTests/obj
