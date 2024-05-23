@@ -1,4 +1,5 @@
 ﻿using com.zhong.chinese_calendar.Models;
+using com.zhong.chinese_calendar.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Net;
@@ -26,8 +27,10 @@ namespace com.zhong.chinese_calendar.Controllers
         [HttpGet]
         [Route("GetYearSpecialDatesFromRemote/{year}")]
         public async Task<YearSpecialDate> GetYearSpecialDatesFromRemote(int year)
-        { 
-            return await ChineseCalendarHelper.GetYearSpecialDatesFromRemoteAsync(year); 
+        {
+            ChineseCalendarService service = new ChineseCalendarService();
+            return await service.GetYearSpecialDatesFromRemoteAsync(year);
+            //return await ChineseCalendarHelper.GetYearSpecialDatesFromRemoteAsync(year);
         }
 
 
@@ -37,11 +40,13 @@ namespace com.zhong.chinese_calendar.Controllers
         /// <param name="year">year</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetSpecialDatesByYear/{year}")]
-        public async Task<YearSpecialDate> GetSpecialDatesByYear(int year)
+        [Route("GetYearSpecialDates/{year}")]
+        public async Task<YearSpecialDate> GetYearSpecialDates(int year)
         {
             var webRootPath = _env.ContentRootPath;
-            return await ChineseCalendarHelper.GetSpecialDatesByYearAsync(year, webRootPath);
+            ChineseCalendarService service = new ChineseCalendarService();
+            return await service.GetYearSpecialDatesAsync(year, webRootPath);
+            //return await ChineseCalendarHelper.GetSpecialDatesByYearAsync(year, webRootPath);
         }
 
         /// <summary>
@@ -58,7 +63,8 @@ namespace com.zhong.chinese_calendar.Controllers
             {
                 try
                 {
-                    msg.Result = await ChineseCalendarHelper.CheckDateIsHolidayAsync(date, _env.ContentRootPath);
+                    msg.Result = await new ChineseCalendarService().CheckDateIsHolidayAsync(date, _env.ContentRootPath);
+                    //msg.Result = await ChineseCalendarHelper.CheckDateIsHolidayAsync(date, _env.ContentRootPath);
                 }
                 catch (HttpRequestException hre)
                 {

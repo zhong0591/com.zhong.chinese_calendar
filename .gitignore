@@ -9,3 +9,5 @@
 /com.zhong.chinese_calendar/Properties
 /com.zhong.chinese_calendarTests/bin/Debug/net8.0
 /com.zhong.chinese_calendarTests/obj
+/com.zhong.chinese_calendar/bin/Release/net8.0
+/com.zhong.chinese_calendarTests/bin/Release/net8.0
