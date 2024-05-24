@@ -1,7 +1,8 @@
-﻿using com.zhong.chinese_calendar.Interfaces;
+﻿using com.zhong.chinese_calendar.Helpers;
+using com.zhong.chinese_calendar.Interfaces;
 using com.zhong.chinese_calendar.Models;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 
 namespace com.zhong.chinese_calendar.Services
@@ -10,13 +11,26 @@ namespace com.zhong.chinese_calendar.Services
     {
         public static readonly string SPECIAL_DATES_JSON_FILE_NAME = "special_dates.json";
         private static readonly string HOLIDAY_API_URL = "http://timor.tech/api/holiday/year/";
+        private readonly ILogger<ChineseCalendarService> _logger;
+
+        public ChineseCalendarService(ILogger<ChineseCalendarService> logger)
+        {
+            _logger = logger;
+        }
 
         public async Task<YearSpecialDate> GetYearSpecialDatesFromRemoteAsync(int year)
         {
             var url = HOLIDAY_API_URL + year;
-            var strHtml = await GetHTMLResponse(url);
-            var specialDates = GetSpecialDatesByHtml(strHtml);
-            return new YearSpecialDate(year, specialDates);
+            var returnMsg = await GetHTMLReturnMsg(url);
+            if (returnMsg.Success && !string.IsNullOrEmpty(returnMsg.Result))
+            {
+                var specialDates = GetSpecialDatesByHtml(returnMsg.Result);
+                return new YearSpecialDate(year, specialDates);
+            }
+            else
+            {
+                return new YearSpecialDate(year, new List<SpecialDate>());
+            }
         }
 
         public async Task<YearSpecialDate> GetYearSpecialDatesAsync(int year, string webRootPath)
@@ -53,60 +67,49 @@ namespace com.zhong.chinese_calendar.Services
             return date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
         }
 
-        private static async Task<string> GetHTMLResponse(string url)
+        private async Task<ReturnMsg<string>> GetHTMLReturnMsg(string url)
         {
-            var strHtml = string.Empty;
+            var retMsg = new ReturnMsg<string>();
             HttpClient httpClient = new HttpClient();
             try
             {
                 HttpResponseMessage response = await httpClient.GetAsync(url);
                 var successResponse = response.EnsureSuccessStatusCode();
-                if (successResponse.IsSuccessStatusCode)
-                {
-                    strHtml = await response.Content.ReadAsStringAsync();
-                }
-                else
-                {
-                    Debug.WriteLine(successResponse.ReasonPhrase);
-                }
+                retMsg.ReasonPhrase = successResponse.ReasonPhrase;
+                retMsg.Result = await response.Content.ReadAsStringAsync();
+                retMsg.StatusCode = successResponse.StatusCode;
             }
             catch (HttpRequestException e)
             {
-                Debug.WriteLine("Message :{0} ", e.Message);
-                throw;
+                SerilogHelper.LogError(_logger, e.Message);
+                retMsg.ReasonPhrase = e.Message;
+                retMsg.StatusCode = System.Net.HttpStatusCode.NotFound;
             }
-            return strHtml;
+            return retMsg;
         }
 
-        private static IEnumerable<SpecialDate> GetSpecialDatesByHtml(string strHtml)
+        private IEnumerable<SpecialDate> GetSpecialDatesByHtml(string strHtml)
         {
             var specialDates = new List<SpecialDate>();
-            try
+            JObject jsonObject = JObject.Parse(strHtml);
+            var FestivalHolidays = jsonObject["holiday"]?.Children<JProperty>();
+            if (FestivalHolidays != null)
             {
-                JObject jsonObject = JObject.Parse(strHtml);
-                var FestivalHolidays = jsonObject["holiday"]?.Children<JProperty>();
-                if (FestivalHolidays != null)
+                foreach (var holiday in FestivalHolidays)
                 {
-                    foreach (var holiday in FestivalHolidays)
+                    var holidayDetails = holiday.Children();
+                    foreach (var holidayDetail in holidayDetails)
                     {
-                        var holidayDetails = holiday.Children();
-                        foreach (var holidayDetail in holidayDetails)
+                        Debug.WriteLine(holidayDetail.ToString(Formatting.Indented));
+                        var SpecialDate = JsonConvert.DeserializeObject<SpecialDate>(holidayDetail.ToString());
+                        if (SpecialDate != null)
                         {
-                            Debug.WriteLine(holidayDetail.ToString(Formatting.Indented));
-                            var SpecialDate = JsonConvert.DeserializeObject<SpecialDate>(holidayDetail.ToString());
-                            if (SpecialDate != null)
-                            {
-                                specialDates.Add(SpecialDate);
-                            }
+                            specialDates.Add(SpecialDate);
                         }
                     }
                 }
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
             return specialDates;
-        } 
+        }
     }
 }

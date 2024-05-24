@@ -1,3 +1,6 @@
+using com.zhong.chinese_calendar.Interfaces;
+using com.zhong.chinese_calendar.Models;
+using com.zhong.chinese_calendar.Services;
 using Serilog;
 
 IConfiguration configuation = new ConfigurationBuilder()
@@ -19,6 +22,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<IChineseCalendarService<YearSpecialDate>, ChineseCalendarService>();
 
 var app = builder.Build();
 

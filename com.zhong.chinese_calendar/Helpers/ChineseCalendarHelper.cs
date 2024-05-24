@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 
-namespace com.zhong.chinese_calendar
+namespace com.zhong.chinese_calendar.Helpers
 {
     public class ChineseCalendarHelper
     {

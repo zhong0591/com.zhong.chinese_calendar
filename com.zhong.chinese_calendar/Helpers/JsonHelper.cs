@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Diagnostics;
 
-
-namespace com.zhong.chinese_calendar
+namespace com.zhong.chinese_calendar.Helpers
 {
     public class JsonHelper<T>
     {
