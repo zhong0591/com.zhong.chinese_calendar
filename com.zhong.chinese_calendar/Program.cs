@@ -1,4 +1,17 @@
+using Serilog;
+
+IConfiguration configuation = new ConfigurationBuilder()
+.SetBasePath(Directory.GetCurrentDirectory())
+.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+.AddEnvironmentVariables().Build();
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((hostingContext, loggerConfiguration) =>
+{
+    loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration);
+});
+
 
 // Add services to the container.
 
@@ -16,10 +29,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+try
+{
+    Log.Information("Starting web host¡­¡­");
 
-app.UseAuthorization();
+    app.UseHttpsRedirection();
 
-app.MapControllers();
+    app.UseAuthorization();
 
-app.Run();
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+
+
+
